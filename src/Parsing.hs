@@ -28,16 +28,11 @@ parseInput = char ',' >> return Input
 
 parseLoop :: Parser Brainfuck
 parseLoop = do
-  _ <- char '['
-  bs <- many parseBrainfuck
-  end <- parseLoopEnd
-  return $ Loop $ bs ++ [end]
-
-parseLoopEnd :: Parser Brainfuck
-parseLoopEnd = char ']' >> return LoopEnd
+  bs <- between (char '[') (char ']') (many parseBrainfuck)
+  return $ Loop bs
 
 parseComment :: Parser Brainfuck
-parseComment = Comment <$> anyChar
+parseComment = Comment <$> noneOf "<>[]+-.,"
 
 parseBrainfuck :: Parser Brainfuck
 parseBrainfuck =
@@ -45,5 +40,5 @@ parseBrainfuck =
 
 parseBrainfuckProgram :: Parser BrainfuckProgram
 parseBrainfuckProgram = do
-  xs <- many parseBrainfuck
-  return $ BrainfuckProgram xs
+  code <- many parseBrainfuck
+  return $ BrainfuckProgram code
