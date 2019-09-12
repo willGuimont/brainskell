@@ -1,4 +1,6 @@
-module Repl
+{-# OPTIONS -Wall #-}
+
+module Run
   ( readAndEvalBrainfuck
   , emptyTape
   ) where

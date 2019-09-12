@@ -1,9 +1,9 @@
+{-# OPTIONS -Wall #-}
+
 module Evaluation
   ( eval
   ) where
 
-import Control.Monad
-import Control.Monad.Loops
 import Data.Array.IO
 import Data.Char
 import Data.IORef
@@ -59,5 +59,5 @@ eval tRef Input = do
   hFlush stdout
   readInt >>= writeTape tRef
 eval tRef (Loop x) = until_ (== 0) (readTape tRef) (\_ -> eval tRef x)
-eval tRef (Comment _) = return ()
+eval _ (Comment _) = return ()
 eval tRef (Composed xs) = mapM_ (eval tRef) xs

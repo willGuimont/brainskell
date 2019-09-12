@@ -4,7 +4,7 @@ module Main where
 
 import System.Environment
 
-import Repl
+import Run
 
 main :: IO ()
 main = do
