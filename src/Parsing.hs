@@ -15,10 +15,10 @@ parseLeft :: Parser Brainfuck
 parseLeft = char '<' >> return MoveLeft
 
 parseAdd :: Parser Brainfuck
-parseAdd = char '+' >> return Add
+parseAdd = char '+' >> return Increment
 
 parseSub :: Parser Brainfuck
-parseSub = char '-' >> return Sub
+parseSub = char '-' >> return Decrement
 
 parsePrint :: Parser Brainfuck
 parsePrint = char '.' >> return Print
@@ -28,17 +28,18 @@ parseInput = char ',' >> return Input
 
 parseLoop :: Parser Brainfuck
 parseLoop = do
-  bs <- between (char '[') (char ']') (many parseBrainfuck)
+  bs <- between (char '[') (char ']') parseComposed
   return $ Loop bs
 
 parseComment :: Parser Brainfuck
 parseComment = Comment <$> noneOf "<>[]+-.,"
 
-parseBrainfuck :: Parser Brainfuck
-parseBrainfuck =
+parseComposed :: Parser Brainfuck
+parseComposed = Composed <$> many parseSimple
+
+parseSimple :: Parser Brainfuck
+parseSimple =
   parseRight <|> parseLeft <|> parseAdd <|> parseSub <|> parsePrint <|> parseInput <|> parseLoop <|> parseComment
 
-parseBrainfuckProgram :: Parser BrainfuckProgram
-parseBrainfuckProgram = do
-  code <- many parseBrainfuck
-  return $ BrainfuckProgram code
+parseBrainfuckProgram :: Parser Brainfuck
+parseBrainfuckProgram = parseComposed
