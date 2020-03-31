@@ -1,5 +1,3 @@
-{-# OPTIONS -Wall #-}
-
 module Parsing
   ( parseBrainfuckProgram
   ) where

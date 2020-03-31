@@ -1,9 +1,15 @@
-{-# OPTIONS -Wall #-}
+{-# LANGUAGE TemplateHaskell #-}
 
-module Brainfuck where
+module Brainfuck
+  ( Brainfuck(..)
+  , Tape(..)
+  , mapTape
+  , mapIndex
+  , readTape
+  ) where
 
-import Data.Array.IO
-import Data.IORef
+import Control.Lens
+import Data.Maybe (fromMaybe)
 
 data Brainfuck
   = MoveRight
@@ -32,6 +38,24 @@ showBrainfuck (Composed xs) = concatMap show xs
 
 data Tape =
   Tape
-    { tape :: IOArray Int Int
-    , index :: IORef Int
+    { _tape :: [Int]
+    , _headIndex :: Int
     }
+
+makeLenses ''Tape
+
+mapTape :: (Int -> Int) -> Tape -> Tape
+mapTape f t = set tape nm t
+  where
+    m = view tape t
+    i = view headIndex t
+    nm = over (element i) f m
+
+mapIndex :: (Int -> Int) -> Tape -> Tape
+mapIndex = over headIndex
+
+readTape :: Tape -> Int
+readTape t = fromMaybe 0 $ m ^? element i
+  where
+    m = view tape t
+    i = view headIndex t

@@ -1,63 +1,44 @@
-{-# OPTIONS -Wall #-}
-
 module Evaluation
   ( eval
   ) where
 
-import Data.Array.IO
 import Data.Char
-import Data.IORef
+import Data.List
 
 import Brainfuck
+import Control.Monad (foldM)
 import System.IO (hFlush, stdout)
+import Text.Read (readMaybe)
 
-writeTape :: IORef Tape -> Int -> IO ()
-writeTape tRef value = do
-  t <- readIORef tRef
-  let xs = tape t
-  i <- readIORef $ Brainfuck.index t
-  writeArray xs i value
-  writeIORef tRef t
+readInput :: IO (Maybe Int)
+readInput = do
+  x <- getLine
+  pure $
+    if "'" `isPrefixOf` x
+      then Just $ ord (x !! 1)
+      else readMaybe x
 
-readTape :: IORef Tape -> IO Int
-readTape tRef = do
-  t <- readIORef tRef
-  let xs = tape t
-  i <- readIORef $ Brainfuck.index t
-  readArray xs i
+loopUntil :: Monad m => (t -> Bool) -> (t -> m t) -> t -> m t
+loopUntil p f t =
+  if p t
+    then pure t
+    else f t >>= loopUntil p f
 
-modifyTape :: IORef Tape -> Int -> IO ()
-modifyTape tRef change = do
-  value <- readTape tRef
-  writeTape tRef (value + change)
+bimapMaybe :: (Monad m) => Maybe a -> m b -> (a -> m b) -> m b
+bimapMaybe Nothing f _ = f
+bimapMaybe (Just x) _ g = g x
 
-moveTape :: IORef Tape -> Int -> IO ()
-moveTape tRef move = do
-  t <- readIORef tRef
-  let iRef = Brainfuck.index t
-  i <- readIORef iRef
-  writeIORef iRef (i + move)
-
-readInt :: IO Int
-readInt = readLn
-
-until_ :: Monad m => (a -> Bool) -> m a -> (a -> m ()) -> m ()
-until_ p prompt action = do
-  res <- prompt
-  if p res
-    then return ()
-    else action res >> until_ p prompt action
-
-eval :: IORef Tape -> Brainfuck -> IO ()
-eval tRef MoveRight = moveTape tRef 1
-eval tRef MoveLeft = moveTape tRef (-1)
-eval tRef Increment = modifyTape tRef 1
-eval tRef Decrement = modifyTape tRef (-1)
-eval tRef Print = readTape tRef >>= (\x -> putStr [chr x])
-eval tRef Input = do
+eval :: Brainfuck -> Tape -> IO Tape
+eval MoveRight t = pure $ mapIndex (+ 1) t
+eval MoveLeft t = pure $ mapIndex (subtract 1) t
+eval Increment t = pure $ mapTape (+ 1) t
+eval Decrement t = pure $ mapTape (subtract 1) t
+eval Print t = (putChar . chr . readTape) t >> hFlush stdout >> pure t
+eval Input t = do
   putStr "Input: "
   hFlush stdout
-  readInt >>= writeTape tRef
-eval tRef (Loop x) = until_ (== 0) (readTape tRef) (\_ -> eval tRef x)
-eval _ (Comment _) = return ()
-eval tRef (Composed xs) = mapM_ (eval tRef) xs
+  val <- readInput
+  bimapMaybe val (eval Input t) (\x -> pure $ mapTape (const x) t)
+eval (Loop x) t = loopUntil ((0 ==) . readTape) (eval x) t
+eval (Comment _) t = pure t
+eval (Composed xs) t = foldM (flip eval) t xs
