@@ -1,5 +1,7 @@
 module Run
-  ( readAndEvalBrainfuck
+  ( readBrainfuck
+  , evalBrainfuck
+  , readAndEvalBrainfuck
   , emptyTape
   ) where
 
@@ -16,9 +18,11 @@ readBrainfuck input =
     Left err -> throwError $ show err
     Right x -> return x
 
-evalBrainfuck :: Tape -> Either String Brainfuck -> IO ()
-evalBrainfuck t (Right x) = eval x t >> pure ()
-evalBrainfuck _ (Left x) = print x
+evalBrainfuck :: Tape -> Brainfuck -> IO ()
+evalBrainfuck t b = eval b t >> pure ()
 
 readAndEvalBrainfuck :: Tape -> String -> IO ()
-readAndEvalBrainfuck t = evalBrainfuck t . readBrainfuck
+readAndEvalBrainfuck t b =
+  case readBrainfuck b of
+    Left x -> print x
+    Right x -> evalBrainfuck t x

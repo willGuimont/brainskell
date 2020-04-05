@@ -40,10 +40,11 @@ makeLenses ''BrainskellInput
 
 instance FromJSON BrainskellInput
 
-newtype BrainskellOutput =
-  BrainskellOutput
-    { output :: T.Text
-    }
+data BrainskellOutput
+  = BrainskellOutput
+      { output :: T.Text
+      }
+  | CompilationError
   deriving (Generic, Show)
 
 makeLenses ''BrainskellOutput
@@ -62,16 +63,21 @@ server = runBrainskell
   where
     runBrainskell pg = do
       let p = replace "," "" $ T.unpack $ program pg
-      (out, _, _, _) <- liftIO (capture (readAndEvalBrainfuck emptyTape p))
-      let x = toString out
-      return . BrainskellOutput $ T.pack x
+      case readBrainfuck p of
+        Right bf -> do
+          (out, _, _, _) <- liftIO (capture (evalBrainfuck emptyTape bf))
+          let str = toString out
+          return . BrainskellOutput $ T.pack str
+        Left _ -> return CompilationError
 
 -- server to WAI app
 wai :: Application
 wai = serve brainskellApi server
 
 runBrainskellServer :: Port -> IO ()
-runBrainskellServer port = run port wai
+runBrainskellServer port = do
+  let settings = setTimeout 5 $ setPort port defaultSettings
+  runSettings settings wai
 
 main :: IO ()
 main = do
