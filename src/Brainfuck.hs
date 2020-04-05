@@ -4,12 +4,13 @@ module Brainfuck
   ( Brainfuck(..)
   , Tape(..)
   , mapTape
-  , mapIndex
+  , mapHead
   , readTape
+  , emptyTape
   ) where
 
 import Control.Lens
-import Data.Maybe (fromMaybe)
+import qualified Data.Map as M
 
 data Brainfuck
   = MoveRight
@@ -38,24 +39,27 @@ showBrainfuck (Composed xs) = concatMap show xs
 
 data Tape =
   Tape
-    { _tape :: [Int]
+    { _tape :: M.Map Int Int
     , _headIndex :: Int
     }
 
 makeLenses ''Tape
+
+emptyTape :: Tape
+emptyTape = Tape M.empty 0
 
 mapTape :: (Int -> Int) -> Tape -> Tape
 mapTape f t = set tape nm t
   where
     m = view tape t
     i = view headIndex t
-    nm = over (element i) f m
+    nm = over (at i) (Just . maybe (f 0) f) m
 
-mapIndex :: (Int -> Int) -> Tape -> Tape
-mapIndex = over headIndex
+mapHead :: (Int -> Int) -> Tape -> Tape
+mapHead = over headIndex
 
 readTape :: Tape -> Int
-readTape t = fromMaybe 0 $ m ^? element i
+readTape t = M.findWithDefault 0 i m
   where
     m = view tape t
     i = view headIndex t

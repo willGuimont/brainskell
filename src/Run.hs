@@ -22,6 +22,3 @@ evalBrainfuck _ (Left x) = print x
 
 readAndEvalBrainfuck :: Tape -> String -> IO ()
 readAndEvalBrainfuck t = evalBrainfuck t . readBrainfuck
-
-emptyTape :: Tape
-emptyTape = Tape (repeat 0) 0

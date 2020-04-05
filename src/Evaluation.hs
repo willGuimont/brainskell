@@ -29,8 +29,8 @@ bimapMaybe Nothing f _ = f
 bimapMaybe (Just x) _ g = g x
 
 eval :: Brainfuck -> Tape -> IO Tape
-eval MoveRight t = pure $ mapIndex (+ 1) t
-eval MoveLeft t = pure $ mapIndex (subtract 1) t
+eval MoveRight t = pure $ mapHead (+ 1) t
+eval MoveLeft t = pure $ mapHead (subtract 1) t
 eval Increment t = pure $ mapTape (+ 1) t
 eval Decrement t = pure $ mapTape (subtract 1) t
 eval Print t = (putChar . chr . readTape) t >> hFlush stdout >> pure t
