@@ -10,7 +10,7 @@ module Brainfuck
   ) where
 
 import Control.Lens
-import qualified Data.Map as M
+import qualified Data.Map.Strict as M
 
 data Brainfuck
   = MoveRight
