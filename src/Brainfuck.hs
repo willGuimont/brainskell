@@ -53,7 +53,8 @@ mapTape f t = set tape nm t
   where
     m = view tape t
     i = view headIndex t
-    nm = over (at i) (Just . maybe (f 0) f) m
+    x = readTape t
+    nm = set (at i) (Just $ f x) m
 
 mapHead :: (Int -> Int) -> Tape -> Tape
 mapHead = over headIndex
