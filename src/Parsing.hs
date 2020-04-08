@@ -12,11 +12,11 @@ parseRight = char '>' >> return MoveRight
 parseLeft :: Parser Brainfuck
 parseLeft = char '<' >> return MoveLeft
 
-parseAdd :: Parser Brainfuck
-parseAdd = char '+' >> return Increment
+parseIncrement :: Parser Brainfuck
+parseIncrement = char '+' >> return Increment
 
-parseSub :: Parser Brainfuck
-parseSub = char '-' >> return Decrement
+parseDecrement :: Parser Brainfuck
+parseDecrement = char '-' >> return Decrement
 
 parsePrint :: Parser Brainfuck
 parsePrint = char '.' >> return Print
@@ -37,7 +37,7 @@ parseComposed = Composed <$> many parseSimple
 
 parseSimple :: Parser Brainfuck
 parseSimple =
-  parseRight <|> parseLeft <|> parseAdd <|> parseSub <|> parsePrint <|> parseInput <|> parseLoop <|> parseComment
+  parseRight <|> parseLeft <|> parseIncrement <|> parseDecrement <|> parsePrint <|> parseInput <|> parseLoop <|> parseComment
 
 parseBrainfuckProgram :: Parser Brainfuck
 parseBrainfuckProgram = parseComposed
